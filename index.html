@@ -3,161 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ল্যান্ড রেকর্ড স্ক্যানার ও অটোমেশন</title>
+    <title>ভূমির নথি নিবন্ধন ও জেমিনি এআই আর্কাইভ</title>
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
         body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; padding: 15px; margin: 0; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
-        h2 { text-align: center; color: #1e293b; font-size: 20px; }
+        h2 { text-align: center; color: #1e293b; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; }
         .box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-        input[type="text"] { width: 75%; padding: 10px; font-size: 15px; border: 1px solid #cbd5e1; border-radius: 5px; }
-        .btn { padding: 10px 15px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-blue { background-color: #2563eb; color: white; }
-        .btn-green { background-color: #16a34a; color: white; }
+        label { font-weight: bold; font-size: 14px; color: #334155; display: block; margin-top: 12px; }
+        select, input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 14px; }
+        .btn { padding: 10px 15px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-blue { background-color: #2563eb; color: white; width: 100%; margin-top: 15px; }
         .btn-gray { background-color: #64748b; color: white; }
-        .upload-area { border: 2px dashed #cbd5e1; padding: 20px; text-align: center; border-radius: 8px; background: #ffffff; cursor: pointer; margin-top: 10px; }
-        .preview-area { margin-top: 20px; text-align: center; display: none; }
-        #previewImage { max-width: 100%; max-height: 300px; display: block; margin: 0 auto; }
+        .btn-green { background-color: #16a34a; color: white; }
+        .upload-area { border: 2px dashed #cbd5e1; padding: 25px; text-align: center; border-radius: 8px; background: white; cursor: pointer; margin-top: 10px; }
+        .scanner-workspace { display: none; margin-top: 20px; background: #0f172a; padding: 15px; border-radius: 8px; text-align: center; }
+        #cropperImage { max-width: 100%; max-height: 350px; display: block; margin: 0 auto; }
         .controls-row { display: flex; justify-content: space-between; margin-top: 15px; gap: 8px; }
-        .filter-section { margin-top: 15px; background: #f1f5f9; padding: 10px; border-radius: 6px; text-align: left; }
+        .filter-section { margin-top: 15px; background: #1e293b; padding: 10px; border-radius: 6px; text-align: left; color: white; }
         input[type="range"] { width: 100%; margin-top: 5px; }
-        .record-card { border-left: 5px solid #16a34a; background: #ffffff; padding: 12px; margin: 10px 0; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+        .ai-status { margin-top: 10px; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; display: none; }
+        .ai-loading { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .ai-success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .correction-badge { background-color: #ef4444; color: white; padding: 2px 6px; font-size: 11px; border-radius: 4px; margin-left: 5px; display: none; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h2>📄 ভূমির নথি নিবন্ধন ও এআই স্ক্যানার</h2>
-    
-    <!-- ১. অনুসন্ধান (সার্চ বার) সেকশন -->
-    <div class="box">
-        <h3 style="margin-top:0; font-size:16px;">🔍 ল্যান্ড রেকর্ড অনুসন্ধান</h3>
-        <input type="text" id="searchInput" placeholder="মৌজা, মালিকের নাম বা দাগ নম্বর...">
-        <button class="btn btn-blue" onclick="searchRecords()">খুঁজুন</button>
-        <div id="searchResults" style="margin-top: 10px;"></div>
+    <h2>📄 ভূমির নথি নিবন্ধন ও এআই আর্কাইভ</h2>
+    <div class="box" style="background: #f1f5f9;">
+        <label for="apiKey" style="margin-top:0;">🔑 আপনার Gemini API Key দিন:</label>
+        <input type="password" id="apiKey" placeholder="AI অটোমেশন চালু করতে এখানে আপনার API Key পেস্ট করুন...">
     </div>
-
-    <!-- ২. স্ক্যানার ও অটোমেশন সেকশন -->
     <div class="box">
-        <h3 style="margin-top:0; font-size:16px;">📸 খতিয়ান স্ক্যান এবং অটো-ক্যাটাগরি</h3>
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-            <p>এখানে ক্লিক করে খতিয়ানের ছবি তুলুন বা আপলোড করুন</p>
-            <input type="file" id="fileInput" accept="image/*" style="display:none;">
-        </div>
-
-        <!-- ইমেজ প্রিভিউ এবং কন্ট্রোল এরিয়া -->
-        <div class="preview-area" id="previewArea">
-            <div style="background:#000; padding:10px; border-radius:8px;">
-                <img id="previewImage" alt="Khatian Preview">
+        <form id="landForm">
+            <label for="docCategory">নথির ক্যাটাগরি বেছে নিন:</label>
+            <select id="docCategory" onchange="handleCategoryChange()" required>
+                <option value="">--বাছাই করুন--</option>
+                <option value="deed">দলিল</option>
+                <option value="khatian">খতিয়ান</option>
+                <option value="warish">ওয়ারিশ সনদ</option>
+                <option value="kharij">খারিজ</option>
+                <option value="others">অন্যান্য</option>
+            </select>
+            <div id="khatianTypeSection" style="display:none; border-left: 4px solid #2563eb; padding-left: 10px; margin-top: 10px;">
+                <label for="khatianType">খতিয়ানের ধরন (Sub-Category): <span class="correction-badge" id="correctionBadge">এআই দ্বারা সনাক্তকৃত</span></label>
+                <select id="khatianType" onchange="flagManualCorrection()">
+                    <option value="">--বাছাই করুন--</option>
+                    <option value="CS">সিএস (CS)</option>
+                    <option value="SA">এসএ (SA)</option>
+                    <option value="RS">আরএস (RS)</option>
+                </select>
             </div>
-            
-            <div class="controls-row">
-                <button class="btn btn-gray" onclick="rotateImage(-90)">🔄 বামে ঘোরান</button>
-                <button class="btn btn-gray" onclick="rotateImage(95)">🔄 ডানে ঘোরান</button>
-                <button class="btn btn-blue" onclick="applyAutoCrop()">✂️ ক্রপ নিশ্চিত করুন</button>
+            <label for="mauzaSelect">মৌজা নির্বাচন করুন:</label>
+            <select id="mauzaSelect" required>
+                <option value="">--মৌজা বেছে নিন--</option>
+                <option value="পাচাইখা">পাচাইখা</option>
+                <option value="বেরোক">বেরোক</option>
+                <option value="আমলাবো">আমলাবো</option>
+                <option value="কাঞ্চন">কাঞ্চন</option>
+                <option value="ভায়েলা">ভায়েলা</option>
+                <option value="অন্যান্য">অন্যান্য</option>
+            </select>
+            <label>নথির ছবি যুক্ত করুন (ফটো শুট / আপলোড):</label>
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <span style="font-size: 28px;">📸</span>
+                <p style="margin: 5px 0 0 0; font-weight: bold; color: #475569;">ক্যামেরা চালু করতে বা ফাইল আপলোড করতে এখানে ট্যাপ করুন</p>
+                <input type="file" id="fileInput" accept="image/*" style="display:none;">
             </div>
-
-            <div class="filter-section">
-                <label for="contrastRange" style="font-size:13px; font-weight:bold;">🔍 লেখা পরিষ্কার করার ফিল্টার (কন্ট্রাস্ট):</label>
-                <input type="range" id="contrastRange" min="100" max="250" value="100" oninput="applyFilters()">
+            <div id="aiStatusBox" class="ai-status"></div>
+            <div class="scanner-workspace" id="scannerWorkspace">
+                <h3 style="color:white; margin-top:0; font-size:15px;">✂️ স্ক্যানার এডিটর (ক্রপ ও রোটেশন)</h3>
+                <div><img id="cropperImage" alt="Workspace Image"></div>
+                <div class="controls-row">
+                    <button type="button" class="btn btn-gray" onclick="rotateImage(-90)">🔄 বামে ঘোরান</button>
+                    <button type="button" class="btn btn-gray" onclick="rotateImage(90)">🔄 ডানে ঘোরান</button>
+                    <button type="button" class="btn btn-green" onclick="processAndAnalyze()">⚡ ক্রপ ও জেমিনি এআই এনালাইসিস</button>
+                </div>
+                <div class="filter-section">
+                    <label for="contrastRange" style="color:#cbd5e1; font-size:12px; margin-top:0;">🔍 লেখা পরিষ্কার করার ফিল্টার (কন্ট্রাস্ট):</label>
+                    <input type="range" id="contrastRange" min="100" max="250" value="100" oninput="applyScannerFilter()">
+                </div>
             </div>
-
-            <button class="btn btn-green" style="width: 100%; margin-top: 15px; font-size:16px;" onclick="processWithGemini()">✨ জেমিনি এআই দিয়ে ভাগ করুন</button>
-            <h4 id="automationResult" style="color: #16a34a; margin-top: 10px; text-align:center;"></h4>
-        </div>
+            <button type="submit" class="btn btn-blue">💾 চূড়ান্ত তথ্য আর্কাইভে সংরক্ষণ করুন</button>
+        </form>
     </div>
 </div>
-
 <script src="https://cloudflare.com"></script>
 <script>
-    let cropper;
+    let cropper; let isAiClassified = false;
+    const docCategory = document.getElementById('docCategory');
+    const khatianTypeSection = document.getElementById('khatianTypeSection');
+    const khatianType = document.getElementById('khatianType');
     const fileInput = document.getElementById('fileInput');
-    const previewImage = document.getElementById('previewImage');
-    const previewArea = document.getElementById('previewArea');
+    const scannerWorkspace = document.getElementById('scannerWorkspace');
+    const cropperImage = document.getElementById('cropperImage');
     const contrastRange = document.getElementById('contrastRange');
-    const automationResult = document.getElementById('automationResult');
-
-    // ডামি ডাটাবেজ সার্চ বার টেস্ট করার জন্য
-    const mockRecords = [
-        {"mauza": "আমলাবো", "type": "সিএস খতিয়ান", "owner": "আব্দুর রহমান", "dag_no": "১০৫"},
-        {"mauza": "পাছাইখা", "type": "আরএস খতিয়ান", "owner": "আবুল কাশেম", "dag_no": "৫১২"},
-        {"mauza": "বেরোক", "type": "বিআরএস খতিয়ান", "owner": "ফাতেমা বেগম", "dag_no": "২৩৪"}
-    ];
-
-    // সার্চ বার ফাংশন
-    function searchRecords() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        const resultsDiv = document.getElementById('searchResults');
-        resultsDiv.innerHTML = '';
-        if(!query) { resultsDiv.innerHTML = 'অনুগ্রহ করে কিছু লিখুন।'; return; }
-        
-        const filtered = mockRecords.filter(r => 
-            r.mauza.toLowerCase().includes(query) || 
-            r.owner.toLowerCase().includes(query) || 
-            r.dag_no.includes(query) || 
-            r.type.toLowerCase().includes(query)
-        );
-
-        if(filtered.length === 0) { resultsDiv.innerHTML = 'কোনো রেকর্ড পাওয়া যায়নি।'; return; }
-        
-        filtered.forEach(rec => {
-            resultsDiv.innerHTML += `
-                <div class="record-card">
-                    <p style="margin:4px 0;"><b>মৌজা:</b> ${rec.mauza} | <b>ধরন:</b> ${rec.type}</p>
-                    <p style="margin:4px 0;"><b>মালিক:</b> ${rec.owner} | <b>দাগ নম্বর:</b> ${rec.dag_no}</p>
-                </div>`;
-        });
+    const aiStatusBox = document.getElementById('aiStatusBox');
+    const correctionBadge = document.getElementById('correctionBadge');
+    function handleCategoryChange() {
+        if (docCategory.value === 'khatian') { khatianTypeSection.style.display = 'block'; khatianType.required = true; }
+        else { khatianTypeSection.style.display = 'none'; khatianType.required = false; correctionBadge.style.display = 'none'; }
     }
-
-    // ফাইল আপলোড ও অটো-ক্রপ বর্ডার ইনিশিয়ালের লজিক
+    function flagManualCorrection() {
+        if (isAiClassified) { correctionBadge.style.display = 'inline-block'; correctionBadge.style.backgroundColor = '#f59e0b'; correctionBadge.innerText = "ইউজার দ্বারা সংশোধিত"; }
+    }
     fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
+        const file = e.target.files;
         if (file) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                previewImage.src = event.target.result;
-                previewArea.style.display = 'block';
-                automationResult.innerText = '';
-                
+                cropperImage.src = event.target.result; scannerWorkspace.style.display = 'block'; aiStatusBox.style.display = 'none'; correctionBadge.style.display = 'none'; isAiClassified = false;
                 if (cropper) { cropper.destroy(); }
-                
-                setTimeout(() => {
-                    cropper = new Cropper(previewImage, {
-                        viewMode: 1,
-                        autoCropArea: 0.85, // অটোমেটিক বাড়তি অংশ বাদ দিয়ে ৮৫% বর্ডার সিলেক্ট করবে
-                        responsive: true,
-                        restore: false
-                    });
-                }, 200);
-            };
-            reader.readAsDataURL(file);
+                setTimeout(() => { cropper = new Cropper(cropperImage, { viewMode: 1, autoCropArea: 0.85, responsive: true }); }, 200);
+            }; reader.readAsDataURL(file);
         }
     });
-
     function rotateImage(degree) { if (cropper) { cropper.rotate(degree); } }
-
-    function applyAutoCrop() {
-        if (cropper) {
-            const croppedCanvas = cropper.getCroppedCanvas();
-            previewImage.src = croppedCanvas.toDataURL();
-            cropper.destroy();
-            cropper = null;
+    function applyScannerFilter() { const val = contrastRange.value; cropperImage.style.filter = `contrast(${val}%) brightness(105%)`; }
+    async function processAndAnalyze() {
+        const apiKey = document.getElementById('apiKey').value.trim(); if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas(); const imageDataUrl = canvas.toDataURL('image/jpeg');
+        scannerWorkspace.style.display = 'none'; cropper.destroy(); cropper = null;
+        if (!apiKey) {
+            showAiStatus("ai-loading", "⏳ ছবি ক্রপ হয়েছে। তবে Gemini API Key না দেওয়ায় সিমুলেশন মোডে আরএস (RS) খতিয়ান সিলেক্ট করা হচ্ছে...");
+            setTimeout(() => { docCategory.value = "khatian"; handleCategoryChange(); khtmlSelectValue("RS"); isAiClassified = true; showAiStatus("ai-success", "✨ এআই (সিমুলেশন) খতিয়ানের ধরন সনাক্ত করেছে: 'আরএস (RS)'। ভুল হলে নিচে পরিবর্তন করতে পারেন।"); }, 2000); return;
         }
-    }
-
-    function applyFilters() {
-        const contrastValue = contrastRange.value;
-        previewImage.style.filter = `contrast(${contrastValue}%) brightness(105%)`;
-    }
-
-    function processWithGemini() {
-        automationResult.innerText = "⏳ জেমিনি ছবি বিশ্লেষণ করে খতিয়ান আলাদা করছে...";
-        setTimeout(() => {
-            // ডামি রেসপন্স (ব্যাকএন্ড কানেক্ট হলে এটি অটোমেটিক হবে)
-            automationResult.innerHTML = "✨ জেমিনি সফলভাবে সনাক্ত করেছে: <strong>আরএস খতিয়ান (মৌজা: আমলাবো)</strong>";
-        }, 2000);
-    }
-</script>
-
-</body>
-</html>
+        showAiStatus("ai-loading", "⏳ জেমিনি এআই ছবি বিশ্লেষণ করে খতিয়ানের ধরন সনাক্ত করছে...");
+        try {
+            const base64Data = imageDataUrl.split(',')[1];
+            const response = await fetch(`https://googleapis.com{apiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
